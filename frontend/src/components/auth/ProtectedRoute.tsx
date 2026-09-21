@@ -1,0 +1,11 @@
+import { type ReactNode } from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { FullPageSpinner } from '@/components/common/LoadingSpinner';
+
+export function ProtectedRoute({ children }: { children: ReactNode }) {
+  const { token, loading } = useAuth();
+  if (loading) return <FullPageSpinner message="Loading your vault..." />;
+  if (!token) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
