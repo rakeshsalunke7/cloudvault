@@ -226,14 +226,27 @@ public class SharingService {
         String token =
                 UUID.randomUUID().toString();
 
+        /*
+         * The database allows only one public-link record
+         * per file. If a previous link was revoked, reuse
+         * that record with a new token.
+         *
+         * This invalidates the old public URL while allowing
+         * the file to receive a new public URL.
+         */
         PublicLink publicLink =
-                PublicLink.builder()
-                        .file(file)
-                        .token(token)
-                        .createdAt(LocalDateTime.now())
-                        .expiresAt(null)
-                        .active(true)
-                        .build();
+                publicLinkRepository
+                        .findByFile(file)
+                        .orElseGet(() ->
+                                PublicLink.builder()
+                                        .file(file)
+                                        .build()
+                        );
+
+        publicLink.setToken(token);
+        publicLink.setCreatedAt(LocalDateTime.now());
+        publicLink.setExpiresAt(null);
+        publicLink.setActive(true);
 
         PublicLink savedLink =
                 publicLinkRepository.save(publicLink);
