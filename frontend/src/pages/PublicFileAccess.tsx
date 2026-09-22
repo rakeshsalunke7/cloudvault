@@ -1,30 +1,39 @@
 import { useEffect, useState } from 'react';
+
 import {
   Download,
+  Eye,
   FileText,
   Loader2,
   ShieldCheck,
 } from 'lucide-react';
+
 import { useParams } from 'react-router-dom';
 
 import api from '@/api/axios';
-import { sharingApi } from '@/api/sharingApi';
 import { downloadBlob } from '@/api/fileApi';
-
 import { Logo } from '@/components/common/Logo';
 import { Button } from '@/components/common/Button';
-
 import { formatFileSize } from '@/utils/formatFileSize';
 import { getApiErrorMessage } from '@/utils/errorHandler';
 
 export default function PublicFileAccess() {
   const { token } = useParams();
 
-  const [fileBlob, setFileBlob] = useState<Blob | null>(null);
-  const [fileName, setFileName] = useState('Shared file');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [downloading, setDownloading] = useState(false);
+  const [fileBlob, setFileBlob] =
+    useState<Blob | null>(null);
+
+  const [fileName, setFileName] =
+    useState('Shared file');
+
+  const [error, setError] =
+    useState('');
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [downloading, setDownloading] =
+    useState(false);
 
   useEffect(() => {
     const loadFile = async () => {
@@ -89,11 +98,14 @@ export default function PublicFileAccess() {
             };
           };
 
-          const responseData = axiosError.response?.data;
+          const responseData =
+            axiosError.response?.data;
 
           if (responseData instanceof Blob) {
             try {
-              const text = await responseData.text();
+              const text =
+                await responseData.text();
+
               const parsed = JSON.parse(text);
 
               setError(
@@ -127,6 +139,29 @@ export default function PublicFileAccess() {
     loadFile();
   }, [token]);
 
+  const preview = () => {
+    if (!fileBlob) {
+      return;
+    }
+
+    const previewUrl =
+      URL.createObjectURL(fileBlob);
+
+    window.open(
+      previewUrl,
+      '_blank',
+      'noopener,noreferrer'
+    );
+
+    /*
+     * Give the browser time to load the object URL
+     * before releasing it.
+     */
+    window.setTimeout(() => {
+      URL.revokeObjectURL(previewUrl);
+    }, 60000);
+  };
+
   const download = async () => {
     if (!fileBlob) {
       return;
@@ -154,6 +189,7 @@ export default function PublicFileAccess() {
         <Logo />
 
         <div className="card mt-12 overflow-hidden p-8 text-center sm:p-10">
+
           {/* Loading */}
           {loading && (
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-brand-500" />
@@ -191,14 +227,23 @@ export default function PublicFileAccess() {
                 {formatFileSize(fileBlob.size)}
               </p>
 
-              <Button
-                className="mt-6"
-                onClick={download}
-                loading={downloading}
-              >
-                <Download className="h-4 w-4" />
-                Download file
-              </Button>
+              <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+                <Button
+                  variant="outline"
+                  onClick={preview}
+                >
+                  <Eye className="h-4 w-4" />
+                  Preview file
+                </Button>
+
+                <Button
+                  onClick={download}
+                  loading={downloading}
+                >
+                  <Download className="h-4 w-4" />
+                  Download file
+                </Button>
+              </div>
 
               <div className="mt-8 flex items-center justify-center gap-2 text-xs text-gray-400">
                 <ShieldCheck className="h-4 w-4" />
